@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<launch>
+
+
+    <!-- For Kitti Raw data-->
+    <remap from="/kitti/velo/pointcloud" to="velodyne_points" />
+    <remap from="/kitti/camera_color_left/camera_info" to="cam00/camera_info" />
+    <remap from="/kitti/camera_color_left/image_raw" to="cam00/image_raw" />
+    <remap from="/kitti/camera_color_right/camera_info" to="cam01/camera_info" />
+    <remap from="/kitti/camera_color_right/image_raw" to="cam01/image_raw" />
+    <remap from="/kitti/camera_gray_left/camera_info" to="cam02/camera_info" />
+    <remap from="/kitti/camera_gray_left/image_raw" to="cam02/image_raw" /> 
+    <remap from="/kitti/camera_gray_right/camera_info" to="cam03/camera_info" /> 
+    <remap from="/kitti/camera_gray_right/image_raw" to="cam03/image_raw" /> 
+    <!-- <node pkg="rosbag" type="play" name="rosbag_play" args=" -clock /home/smalhotra/Downloads/07/kitti_2011_09_30_drive_0027_synced.bag"/>  -->
+
+
+    <!--add the updated arugument here also -->
+
+    <!--- Sim Time -->
+    <param name="/use_sim_time" value="true" />
+    <param name="scan_period" value="0.1" />
+    <param name="scan_line" value="64" />
+    <!-- <param name="RESULT_PATH" type="string" value="/home/smalhotra/Downloads/07/test_05_but_downsampled.txt" /> -->
+    <param name="ring_height" type="int" value="20" />
+    <param name="ring_width" type="int" value="60" />s
+    <param name="vertical_angle" type="double" value="2.0" />
+    <param name="max_dis" type="double" value="90.0" />
+    <param name="min_dis" type="double" value="3.0" />
+
+    <node pkg="iscloam" type="iscloam_odom_estimation_node" name="iscloam_odom_estimation_node" output="screen"/>
+    <node pkg="iscloam" type="iscloam_laser_processing_node" name="iscloam_laser_processing_node" output="screen"/>
+    <node pkg="iscloam" type="iscloam_isc_generation_node" name="iscloam_isc_generation_node" output="screen"/>
+    <node pkg="iscloam" type="iscloam_isc_optimization_node" name="iscloam_isc_optimization_node" output="screen"/>
+
+    <node pkg="tf" type="static_transform_publisher" name="word2map_tf"  args="0 0 0 0 0 0 /world /map 10" />
+
+    <arg name="rviz" default="true" />
+    <group if="$(arg rviz)">
+        <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find iscloam)/rviz/iscloam.rviz" />
+    </group>
+
+    
+    <node pkg="hector_trajectory_server" type="hector_trajectory_server" name="trajectory_server_loam" ns="gt" >
+        <param name="/target_frame_name" value="world" />
+        <param name="/source_frame_name" value="velodyne" />
+        <param name="/trajectory_update_rate" value="10.0" />
+        <param name="/trajectory_publish_rate" value="10.0" />
+    </node>
+    <node pkg="hector_trajectory_server" type="hector_trajectory_server" name="trajectory_server_loam" ns="odom_final" >
+        <param name="/target_frame_name" value="world" />
+        <param name="/source_frame_name" value="odom_final" />
+        <param name="/trajectory_update_rate" value="10.0" />
+        <param name="/trajectory_publish_rate" value="10.0" />
+    </node>
+
+</launch>
+
+
+
